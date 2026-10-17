@@ -54,7 +54,7 @@
             justify-content: space-between;
             color: #888;
             font-size: 12px;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         .balance {
@@ -89,7 +89,7 @@
         .number-display {
             background: #ccc;
             color: #000;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 900;
             padding: 10px 15px;
             border-radius: 5px;
@@ -100,13 +100,17 @@
             box-sizing: border-box;
             margin-bottom: 15px;
             font-family: 'Courier New', Courier, monospace;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .details {
             color: #888;
             font-size: 12px;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             min-height: 35px;
         }
 
@@ -121,8 +125,8 @@
             background-color: #E5A93D;
             color: #000;
             border: none;
-            padding: 15px;
-            font-size: 16px;
+            padding: 12px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
@@ -171,6 +175,92 @@
         #case-btn:hover {
             background-color: #8e44ad;
         }
+
+        #inv-btn {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        #inv-btn:hover {
+            background-color: #2980b9;
+        }
+
+        /* Модальное окно инвентаря */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #1E1E1E;
+            border: 1px solid #E5A93D;
+            padding: 20px;
+            border-radius: 15px;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(229, 169, 61, 0.2);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #E5A93D;
+            text-transform: uppercase;
+        }
+
+        .close {
+            color: #888;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .inv-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #2A2A2A;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .inv-item span {
+            font-weight: bold;
+        }
+
+        .sell-btn {
+            background-color: #2ecc71;
+            color: #000;
+            padding: 5px 10px;
+            font-size: 10px;
+        }
+
+        .sell-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .empty-inv {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -209,6 +299,18 @@
             <button id="spin-btn">Крутить (-3000 ₽)</button>
             <button id="tap-btn">ТАПАТЬ (+10 ₽)</button>
             <button id="case-btn">ОТКРЫТЬ КЕЙС (-1 000 000 ₽)</button>
+            <button id="inv-btn">ИНВЕНТАРЬ</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно инвентаря -->
+    <div id="inv-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-inv">&times;</span>
+            <h3>Инвентарь</h3>
+            <div id="inv-list">
+                <p class="empty-inv">Тут пусто, хули ты хотел</p>
+            </div>
         </div>
     </div>
 
@@ -216,22 +318,51 @@
         const spinBtn = document.getElementById('spin-btn');
         const tapBtn = document.getElementById('tap-btn');
         const caseBtn = document.getElementById('case-btn');
+        const invBtn = document.getElementById('inv-btn');
         const numberDisplay = document.getElementById('number');
         const rarityDisplay = document.getElementById('rarity');
         const priceDisplay = document.getElementById('price');
         const detailsDisplay = document.getElementById('details');
         const balanceDisplay = document.getElementById('balance');
         const regionSelect = document.getElementById('region-select');
+        
+        const invModal = document.getElementById('inv-modal');
+        const closeInv = document.getElementById('close-inv');
+        const invList = document.getElementById('inv-list');
 
         let balance = 10000;
         let isSpinning = false;
         const SPIN_COST = 3000;
         const CASE_COST = 1000000;
 
+        // Инвентарь и цены
+        let inventory = {
+            mansion: 0,
+            heli: 0,
+            house: 0,
+            car: 0,
+            shovel: 0
+        };
+
+        const itemNames = {
+            mansion: "Особняк",
+            heli: "Вертолет",
+            house: "Маленький дом",
+            car: "Спорткар",
+            shovel: "Лопата"
+        };
+
+        const itemPrices = {
+            mansion: 400000000,
+            heli: 20000000,
+            house: 10000000,
+            car: 5000000,
+            shovel: 3000
+        };
+
         function updateBalance() {
             balanceDisplay.innerText = balance.toLocaleString('ru-RU');
             
-            // Логика для кнопки тапа
             if (balance < SPIN_COST) {
                 spinBtn.style.display = 'none';
                 tapBtn.style.display = 'block';
@@ -240,13 +371,44 @@
                 tapBtn.style.display = 'none';
             }
 
-            // Логика для кнопки кейса
             if (balance >= CASE_COST) {
                 caseBtn.style.display = 'block';
             } else {
                 caseBtn.style.display = 'none';
             }
         }
+
+        function updateInventoryUI() {
+            invList.innerHTML = "";
+            let hasItems = false;
+
+            for (let key in inventory) {
+                if (inventory[key] > 0) {
+                    hasItems = true;
+                    let div = document.createElement('div');
+                    div.className = 'inv-item';
+                    div.innerHTML = `
+                        <span>${itemNames[key]} (x${inventory[key]})</span>
+                        <button class="sell-btn" onclick="sellItem('${key}')">Продать за ${itemPrices[key].toLocaleString('ru-RU')} ₽</button>
+                    `;
+                    invList.appendChild(div);
+                }
+            }
+
+            if (!hasItems) {
+                invList.innerHTML = '<p class="empty-inv">Тут пусто, хули ты хотел</p>';
+            }
+        }
+
+        window.sellItem = function(key) {
+            if (inventory[key] > 0) {
+                inventory[key]--;
+                balance += itemPrices[key];
+                updateBalance();
+                updateInventoryUI();
+                detailsDisplay.innerText = `Продал ${itemNames[key]} за ${itemPrices[key].toLocaleString('ru-RU')} ₽`;
+            }
+        };
 
         function getRandomDigit() {
             return Math.floor(Math.random() * 10).toString();
@@ -383,15 +545,19 @@
 
             if (roll < 5) {
                 reward = "ОСОБНЯК";
+                inventory.mansion++;
                 rewardColor = "#FF0000";
             } else if (roll < 15) {
                 reward = "ВЕРТОЛЕТ";
+                inventory.heli++;
                 rewardColor = "#FF00FF";
             } else if (roll < 25) {
                 reward = "МАЛЕНЬКИЙ ДОМ";
+                inventory.house++;
                 rewardColor = "#9B59B6";
             } else if (roll < 40) {
                 reward = "СПОРТКАР";
+                inventory.car++;
                 rewardColor = "#3498db";
             } else if (roll < 60) {
                 reward = "500 000 ₽";
@@ -401,32 +567,36 @@
                 updateBalance();
             } else {
                 reward = "ЛОПАТА";
+                inventory.shovel++;
                 rewardColor = "#888";
             }
 
+            updateInventoryUI();
+
             numberDisplay.innerText = reward;
+            numberDisplay.style.color = rewardColor;
             rarityDisplay.innerText = "КЕЙС ВСКРЫТ";
             rarityDisplay.style.color = "#fff";
-            priceDisplay.innerText = isMoney ? "+500 000 ₽" : "Предмет";
+            priceDisplay.innerText = isMoney ? "+500 000 ₽" : "В ИНВЕНТАРЕ";
             priceDisplay.style.color = rewardColor;
             
             if (isMoney) {
                 detailsDisplay.innerText = "Бабок подвалило, иди ещё крути.";
             } else {
-                detailsDisplay.innerText = "Хуйня какая-то, но хоть что-то.";
+                detailsDisplay.innerText = "Шмотка в рюкзаке, можешь продать.";
             }
 
-            // Возвращаем интерфейс в норму через пару секунд
             setTimeout(() => {
                 if (!isSpinning && balance >= SPIN_COST) {
-                    numberDisplay.innerText = "+7 (999) 000-00-00";
+                    numberDisplay.innerText = regionSelect.value + " (999) 000-00-00";
+                    numberDisplay.style.color = "#000";
                     rarityDisplay.innerText = "Обычный";
                     rarityDisplay.style.color = "#E5A93D";
                     priceDisplay.innerText = "1 000 ₽";
                     priceDisplay.style.color = "#E5A93D";
                     detailsDisplay.innerText = "Жми крутить, чё встал. Спин - 3000 ₽";
                 }
-            }, 4000);
+            }, 3000);
         }
 
         tapBtn.addEventListener('click', () => {
@@ -440,7 +610,23 @@
         spinBtn.addEventListener('click', spin);
         caseBtn.addEventListener('click', openCase);
 
+        invBtn.addEventListener('click', () => {
+            updateInventoryUI();
+            invModal.style.display = 'flex';
+        });
+
+        closeInv.addEventListener('click', () => {
+            invModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === invModal) {
+                invModal.style.display = 'none';
+            }
+        });
+
         updateBalance();
+        updateInventoryUI();
     </script>
 </body>
 </html>
