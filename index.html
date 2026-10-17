@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAGE Numbers</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #E5A93D;
+            margin: 0;
+            font-size: 28px;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            margin: 5px 0 0 0;
+            font-size: 32px;
+            font-weight: 900;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #1E1E1E 0%, #0A0A0A 100%);
+            border: 1px solid #333;
+            border-radius: 20px;
+            width: 320px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card-top {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 40px;
+        }
+
+        .balance {
+            color: #E5A93D;
+            font-weight: bold;
+        }
+
+        .rarity-bar {
+            background-color: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+
+        .rarity-name {
+            color: #E5A93D;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .rarity-price {
+            color: #E5A93D;
+            font-weight: bold;
+        }
+
+        .number-display {
+            background: #ccc;
+            color: #000;
+            font-size: 26px;
+            font-weight: 900;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: 2px solid #fff;
+            letter-spacing: 2px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .details {
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+            min-height: 35px;
+        }
+
+        .controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #E5A93D;
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #FFC55C;
+        }
+
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        select {
+            background-color: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            cursor: pointer;
+        }
+
+        #tap-btn {
+            background-color: #d32f2f;
+            color: #fff;
+            display: none;
+        }
+
+        #tap-btn:hover {
+            background-color: #f44336;
+        }
+
+        #case-btn {
+            background-color: #9b59b6;
+            color: #fff;
+            display: none;
+        }
+
+        #case-btn:hover {
+            background-color: #8e44ad;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>ЛОВИ</h1>
+        <h2>НОМЕРА</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-top">
+            <span>===</span>
+            <span class="balance">БАЛАНС: <span id="balance">10 000</span> ₽</span>
+        </div>
+
+        <div class="rarity-bar">
+            <span class="rarity-name" id="rarity">Обычный</span>
+            <span class="rarity-price" id="price">1 000 ₽</span>
+        </div>
+
+        <div class="number-display" id="number">+7 (999) 000-00-00</div>
+
+        <div class="details" id="details">
+            Жми крутить, чё встал. Спин - 3000 ₽
+        </div>
+
+        <div class="controls">
+            <select id="region-select">
+                <option value="+7">Россия (+7)</option>
+                <option value="+1">США/Канада (+1)</option>
+                <option value="+44">Великобритания (+44)</option>
+                <option value="+49">Германия (+49)</option>
+                <option value="+33">Франция (+33)</option>
+                <option value="+81">Япония (+81)</option>
+            </select>
+            <button id="spin-btn">Крутить (-3000 ₽)</button>
+            <button id="tap-btn">ТАПАТЬ (+10 ₽)</button>
+            <button id="case-btn">ОТКРЫТЬ КЕЙС (-1 000 000 ₽)</button>
+        </div>
+    </div>
+
+    <script>
+        const spinBtn = document.getElementById('spin-btn');
+        const tapBtn = document.getElementById('tap-btn');
+        const caseBtn = document.getElementById('case-btn');
+        const numberDisplay = document.getElementById('number');
+        const rarityDisplay = document.getElementById('rarity');
+        const priceDisplay = document.getElementById('price');
+        const detailsDisplay = document.getElementById('details');
+        const balanceDisplay = document.getElementById('balance');
+        const regionSelect = document.getElementById('region-select');
+
+        let balance = 10000;
+        let isSpinning = false;
+        const SPIN_COST = 3000;
+        const CASE_COST = 1000000;
+
+        function updateBalance() {
+            balanceDisplay.innerText = balance.toLocaleString('ru-RU');
+            
+            // Логика для кнопки тапа
+            if (balance < SPIN_COST) {
+                spinBtn.style.display = 'none';
+                tapBtn.style.display = 'block';
+            } else {
+                spinBtn.style.display = 'block';
+                tapBtn.style.display = 'none';
+            }
+
+            // Логика для кнопки кейса
+            if (balance >= CASE_COST) {
+                caseBtn.style.display = 'block';
+            } else {
+                caseBtn.style.display = 'none';
+            }
+        }
+
+        function getRandomDigit() {
+            return Math.floor(Math.random() * 10).toString();
+        }
+
+        function generateNumber() {
+            let digits = "";
+            for (let i = 0; i < 10; i++) {
+                digits += getRandomDigit();
+            }
+            return digits;
+        }
+
+        function formatNumber(digits, region) {
+            return `${region} (${digits.substring(0,3)}) ${digits.substring(3,6)}-${digits.substring(6,8)}-${digits.substring(8,10)}`;
+        }
+
+        function evaluateNumber(digits) {
+            let counts = {};
+            for (let i = 0; i < digits.length; i++) {
+                let d = digits[i];
+                counts[d] = (counts[d] || 0) + 1;
+            }
+
+            let maxFreq = 0;
+            let mostFrequentDigit = null;
+            for (let digit in counts) {
+                if (counts[digit] > maxFreq) {
+                    maxFreq = counts[digit];
+                    mostFrequentDigit = digit;
+                }
+            }
+
+            let rarity = "";
+            let multiplier = 1;
+
+            if (maxFreq >= 7) {
+                rarity = "ЛЕГЕНДАРНЫЙ";
+                multiplier = 500000;
+            } else if (maxFreq === 6) {
+                rarity = "МИФИЧЕСКИЙ";
+                multiplier = 50000;
+            } else if (maxFreq === 5) {
+                rarity = "ЭПИЧЕСКИЙ";
+                multiplier = 5000;
+            } else if (maxFreq === 4) {
+                rarity = "РЕДКИЙ";
+                multiplier = 500;
+            } else if (maxFreq === 3) {
+                rarity = "НЕОБЫЧНЫЙ";
+                multiplier = 50;
+            } else {
+                rarity = "ОБЫЧНЫЙ";
+                multiplier = 1;
+            }
+
+            if (digits.substring(6) === "0000") {
+                rarity = "ЛЕГЕНДАРНЫЙ (ЗОЛОТО)";
+                multiplier = 1000000;
+            }
+
+            let basePrice = 1000;
+            let finalPrice = basePrice * multiplier;
+            let details = `Макс. совпадений: ${maxFreq} (цифра ${mostFrequentDigit})`;
+
+            return { rarity, finalPrice, details };
+        }
+
+        function spin() {
+            if (isSpinning) return;
+            if (balance < SPIN_COST) return;
+
+            balance -= SPIN_COST;
+            updateBalance();
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+            spinBtn.innerText = "Крутим...";
+
+            let spins = 0;
+            let maxSpins = 20;
+            let region = regionSelect.value;
+
+            let interval = setInterval(() => {
+                let tempDigits = generateNumber();
+                numberDisplay.innerText = formatNumber(tempDigits, region);
+                spins++;
+
+                if (spins >= maxSpins) {
+                    clearInterval(interval);
+                    finishSpin(region);
+                }
+            }, 50);
+        }
+
+        function finishSpin(region) {
+            let finalDigits = generateNumber();
+            numberDisplay.innerText = formatNumber(finalDigits, region);
+            
+            let result = evaluateNumber(finalDigits);
+            
+            rarityDisplay.innerText = result.rarity;
+            priceDisplay.innerText = result.finalPrice.toLocaleString('ru-RU') + ' ₽';
+            detailsDisplay.innerText = result.details;
+
+            if (result.rarity.includes("ЛЕГЕНДАРНЫЙ")) {
+                rarityDisplay.style.color = "#FF0000";
+            } else if (result.rarity === "МИФИЧЕСКИЙ") {
+                rarityDisplay.style.color = "#FF00FF";
+            } else if (result.rarity === "ЭПИЧЕСКИЙ") {
+                rarityDisplay.style.color = "#9B59B6";
+            } else {
+                rarityDisplay.style.color = "#E5A93D";
+            }
+
+            balance += result.finalPrice;
+            updateBalance();
+
+            isSpinning = false;
+            spinBtn.disabled = false;
+            spinBtn.innerText = `Крутить (-${SPIN_COST} ₽)`;
+        }
+
+        function openCase() {
+            if (balance < CASE_COST || isSpinning) return;
+
+            balance -= CASE_COST;
+            updateBalance();
+
+            let roll = Math.random() * 100;
+            let reward = "";
+            let isMoney = false;
+            let rewardColor = "#E5A93D";
+
+            if (roll < 5) {
+                reward = "ОСОБНЯК";
+                rewardColor = "#FF0000";
+            } else if (roll < 15) {
+                reward = "ВЕРТОЛЕТ";
+                rewardColor = "#FF00FF";
+            } else if (roll < 25) {
+                reward = "МАЛЕНЬКИЙ ДОМ";
+                rewardColor = "#9B59B6";
+            } else if (roll < 40) {
+                reward = "СПОРТКАР";
+                rewardColor = "#3498db";
+            } else if (roll < 60) {
+                reward = "500 000 ₽";
+                isMoney = true;
+                rewardColor = "#2ecc71";
+                balance += 500000;
+                updateBalance();
+            } else {
+                reward = "ЛОПАТА";
+                rewardColor = "#888";
+            }
+
+            numberDisplay.innerText = reward;
+            rarityDisplay.innerText = "КЕЙС ВСКРЫТ";
+            rarityDisplay.style.color = "#fff";
+            priceDisplay.innerText = isMoney ? "+500 000 ₽" : "Предмет";
+            priceDisplay.style.color = rewardColor;
+            
+            if (isMoney) {
+                detailsDisplay.innerText = "Бабок подвалило, иди ещё крути.";
+            } else {
+                detailsDisplay.innerText = "Хуйня какая-то, но хоть что-то.";
+            }
+
+            // Возвращаем интерфейс в норму через пару секунд
+            setTimeout(() => {
+                if (!isSpinning && balance >= SPIN_COST) {
+                    numberDisplay.innerText = "+7 (999) 000-00-00";
+                    rarityDisplay.innerText = "Обычный";
+                    rarityDisplay.style.color = "#E5A93D";
+                    priceDisplay.innerText = "1 000 ₽";
+                    priceDisplay.style.color = "#E5A93D";
+                    detailsDisplay.innerText = "Жми крутить, чё встал. Спин - 3000 ₽";
+                }
+            }, 4000);
+        }
+
+        tapBtn.addEventListener('click', () => {
+            balance += 10;
+            updateBalance();
+            if (balance >= SPIN_COST) {
+                detailsDisplay.innerText = "Бабки есть, хули тапаешь? Иди крути.";
+            }
+        });
+
+        spinBtn.addEventListener('click', spin);
+        caseBtn.addEventListener('click', openCase);
+
+        updateBalance();
+    </script>
+</body>
+</html>
