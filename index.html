@@ -15,6 +15,7 @@
             min-height: 100vh;
             margin: 0;
             flex-direction: column;
+            padding: 20px 0;
         }
 
         .header {
@@ -89,12 +90,12 @@
         .number-display {
             background: #ccc;
             color: #000;
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 900;
             padding: 10px 15px;
             border-radius: 5px;
             border: 2px solid #fff;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-align: center;
             width: 100%;
             box-sizing: border-box;
@@ -176,16 +177,31 @@
             background-color: #8e44ad;
         }
 
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
         #inv-btn {
             background-color: #3498db;
             color: #fff;
+            flex: 1;
         }
 
         #inv-btn:hover {
             background-color: #2980b9;
         }
 
-        /* Модальное окно инвентаря */
+        #ach-btn {
+            background-color: #e67e22;
+            color: #fff;
+            flex: 1;
+        }
+
+        #ach-btn:hover {
+            background-color: #d35400;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -194,7 +210,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.8);
+            background-color: rgba(0,0,0,0.85);
             justify-content: center;
             align-items: center;
         }
@@ -204,10 +220,11 @@
             border: 1px solid #E5A93D;
             padding: 20px;
             border-radius: 15px;
-            width: 300px;
+            width: 320px;
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 0 20px rgba(229, 169, 61, 0.2);
+            box-sizing: border-box;
         }
 
         .modal-content h3 {
@@ -261,6 +278,116 @@
             color: #888;
             font-size: 14px;
         }
+
+        .ach-counter {
+            text-align: center;
+            color: #E5A93D;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .ach-progress {
+            height: 6px;
+            background-color: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .ach-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #E5A93D, #FFC55C);
+            transition: width 0.3s;
+        }
+
+        .ach-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #2A2A2A;
+            padding: 8px 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .ach-item.locked {
+            opacity: 0.4;
+            background-color: #1A1A1A;
+        }
+
+        .ach-item.unlocked {
+            border-left: 3px solid #2ecc71;
+        }
+
+        .ach-icon {
+            font-size: 22px;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .ach-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .ach-name {
+            font-weight: bold;
+            color: #E5A93D;
+        }
+
+        .ach-item.locked .ach-name {
+            color: #888;
+        }
+
+        .ach-desc {
+            color: #888;
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        .ach-check {
+            font-size: 16px;
+            color: #2ecc71;
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+
+        .toast {
+            background: linear-gradient(135deg, #E5A93D, #FFC55C);
+            color: #000;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            animation: toastIn 0.3s ease;
+            max-width: 280px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -299,7 +426,10 @@
             <button id="spin-btn">Крутить (-3000 ₽)</button>
             <button id="tap-btn">ТАПАТЬ (+10 ₽)</button>
             <button id="case-btn">ОТКРЫТЬ КЕЙС (-1 000 000 ₽)</button>
-            <button id="inv-btn">ИНВЕНТАРЬ</button>
+            <div class="btn-row">
+                <button id="inv-btn">🎒 ИНВ</button>
+                <button id="ach-btn">🏆 АЧИВКИ</button>
+            </div>
         </div>
     </div>
 
@@ -314,35 +444,51 @@
         </div>
     </div>
 
+    <!-- Модальное окно достижений -->
+    <div id="ach-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-ach">&times;</span>
+            <h3>Достижения</h3>
+            <div class="ach-counter" id="ach-counter">0 / 100</div>
+            <div class="ach-progress">
+                <div class="ach-progress-bar" id="ach-progress-bar" style="width: 0%"></div>
+            </div>
+            <div id="ach-list"></div>
+        </div>
+    </div>
+
+    <!-- Контейнер для уведомлений -->
+    <div class="toast-container" id="toast-container"></div>
+
     <script>
+        // === DOM элементы ===
         const spinBtn = document.getElementById('spin-btn');
         const tapBtn = document.getElementById('tap-btn');
         const caseBtn = document.getElementById('case-btn');
         const invBtn = document.getElementById('inv-btn');
+        const achBtn = document.getElementById('ach-btn');
         const numberDisplay = document.getElementById('number');
         const rarityDisplay = document.getElementById('rarity');
         const priceDisplay = document.getElementById('price');
         const detailsDisplay = document.getElementById('details');
         const balanceDisplay = document.getElementById('balance');
         const regionSelect = document.getElementById('region-select');
-        
+
         const invModal = document.getElementById('inv-modal');
         const closeInv = document.getElementById('close-inv');
         const invList = document.getElementById('inv-list');
 
-        let balance = 10000;
-        let isSpinning = false;
+        const achModal = document.getElementById('ach-modal');
+        const closeAch = document.getElementById('close-ach');
+        const achList = document.getElementById('ach-list');
+        const achCounter = document.getElementById('ach-counter');
+        const achProgressBar = document.getElementById('ach-progress-bar');
+
+        const toastContainer = document.getElementById('toast-container');
+
+        // === Константы ===
         const SPIN_COST = 3000;
         const CASE_COST = 1000000;
-
-        // Инвентарь и цены
-        let inventory = {
-            mansion: 0,
-            heli: 0,
-            house: 0,
-            car: 0,
-            shovel: 0
-        };
 
         const itemNames = {
             mansion: "Особняк",
@@ -350,6 +496,14 @@
             house: "Маленький дом",
             car: "Спорткар",
             shovel: "Лопата"
+        };
+
+        const itemIcons = {
+            mansion: "🏰",
+            heli: "🚁",
+            house: "🏠",
+            car: "🏎️",
+            shovel: "🪏"
         };
 
         const itemPrices = {
@@ -360,9 +514,168 @@
             shovel: 3000
         };
 
+        // === Состояние ===
+        let balance = 10000;
+        let isSpinning = false;
+        let inventory = { mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 };
+        let stats = defaultStats();
+        let unlockedAchievements = {};
+        let initialLoad = true;
+
+        function defaultStats() {
+            return {
+                totalSpins: 0,
+                totalCases: 0,
+                totalEarned: 10000,
+                maxBalance: 10000,
+                itemsEarned: { mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 },
+                soldByType: { mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 },
+                itemsSold: 0,
+                legendarySpins: 0,
+                mythicalSpins: 0,
+                epicSpins: 0,
+                goldSpins: 0,
+                caseSpending: 0
+            };
+        }
+
+        function inventorySize() {
+            let total = 0;
+            for (let k in inventory) total += inventory[k];
+            return total;
+        }
+
+        // === Список 100 достижений ===
+        const achievementsList = [];
+        function addAch(id, name, desc, icon, check) {
+            achievementsList.push({ id, name, desc, icon, check });
+        }
+
+        // Спины (10)
+        [1, 5, 10, 25, 50, 100, 250, 500, 1000, 5000].forEach(n => {
+            const name = n === 1 ? 'Первый спин!' : `Спинов: ${n}`;
+            addAch(`spin_${n}`, name, `Сделайте ${n} спинов`, '🎰', () => stats.totalSpins >= n);
+        });
+
+        // Кейсы (9)
+        [1, 2, 5, 10, 20, 50, 100, 200, 500].forEach(n => {
+            const name = n === 1 ? 'Первый кейс!' : `Кейсов: ${n}`;
+            addAch(`case_${n}`, name, `Откройте ${n} кейсов`, '📦', () => stats.totalCases >= n);
+        });
+
+        // Баланс (19)
+        [
+            [10000, '10 000 ₽ на счету'],
+            [25000, '25 000 ₽ на счету'],
+            [50000, 'Первые 50 000 ₽'],
+            [100000, '100 000 ₽ на счету'],
+            [250000, '250 000 ₽ на счету'],
+            [500000, 'Полмиллиона'],
+            [1000000, 'Миллионер!'],
+            [2000000, '2 миллиона'],
+            [5000000, '5 миллионов'],
+            [10000000, '10 миллионов'],
+            [25000000, '25 миллионов'],
+            [50000000, '50 миллионов'],
+            [100000000, '100 миллионов'],
+            [250000000, '250 миллионов'],
+            [500000000, 'Полмиллиарда'],
+            [1000000000, 'Миллиардер!'],
+            [5000000000, '5 миллиардов'],
+            [10000000000, '10 миллиардов'],
+            [50000000000, '50 миллиардов']
+        ].forEach(([val, name]) => {
+            addAch(`bal_${val}`, name, `Достигните ${val.toLocaleString('ru-RU')} ₽`, '💰', () => stats.maxBalance >= val);
+        });
+
+        // Заработано всего (7)
+        [50000, 100000, 500000, 1000000, 10000000, 100000000, 1000000000].forEach(n => {
+            addAch(`earn_${n}`, `Заработано ${n.toLocaleString('ru-RU')} ₽`, `Заработайте ${n.toLocaleString('ru-RU')} ₽ за всё время`, '💵', () => stats.totalEarned >= n);
+        });
+
+        // Предметы (32)
+        const itemCategories = [
+            { key: 'mansion', icon: '🏰', name: 'Особняк', counts: [1, 2, 5, 10, 25, 50], first: 'УРА, ТЫ ВЫБИЛ ОСОБНЯК!' },
+            { key: 'heli', icon: '🚁', name: 'Вертолет', counts: [1, 2, 5, 10, 25, 50], first: 'Первый вертолет!' },
+            { key: 'house', icon: '🏠', name: 'Дом', counts: [1, 2, 5, 10, 25, 50], first: 'Первый домик!' },
+            { key: 'car', icon: '🏎️', name: 'Спорткар', counts: [1, 2, 5, 10, 25, 50], first: 'Первая тачка!' },
+            { key: 'shovel', icon: '🪏', name: 'Лопата', counts: [1, 5, 10, 25, 50, 100, 250, 500], first: 'Хоть лопата!' }
+        ];
+        itemCategories.forEach(cat => {
+            cat.counts.forEach(n => {
+                const name = n === 1 ? cat.first : `${cat.name} x${n}`;
+                addAch(`${cat.key}_${n}`, name, `Выбейте ${n} шт. (${cat.name})`, cat.icon, () => stats.itemsEarned[cat.key] >= n);
+            });
+        });
+
+        // Продано всего (6)
+        [1, 5, 10, 25, 50, 100].forEach(n => {
+            const name = n === 1 ? 'Первая продажа!' : `Продано ${n} предметов`;
+            addAch(`sold_${n}`, name, `Продайте ${n} предметов`, '💸', () => stats.itemsSold >= n);
+        });
+
+        // Продажа конкретных предметов (5)
+        itemCategories.forEach(cat => {
+            addAch(`sell_${cat.key}`, `Продал ${cat.name}`, `Продайте ${cat.name.toLowerCase()}`, cat.icon, () => stats.soldByType[cat.key] >= 1);
+        });
+
+        // Редкость номеров (4)
+        addAch('legend_1', 'Легендарный номер!', 'Выбейте легендарный номер', '🌟', () => stats.legendarySpins >= 1);
+        addAch('myth_1', 'Мифический номер!', 'Выбейте мифический номер', '🔮', () => stats.mythicalSpins >= 1);
+        addAch('epic_1', 'Эпический номер!', 'Выбейте эпический номер', '💎', () => stats.epicSpins >= 1);
+        addAch('gold_1', 'Золотой номер!', 'Выбейте номер с 0000', '🥇', () => stats.goldSpins >= 1);
+
+        // Все предметы (1)
+        addAch('all_items', 'Коллекционер', 'Соберите все виды предметов (хотя бы по 1)', '🏆', () => {
+            return stats.itemsEarned.mansion >= 1 && stats.itemsEarned.heli >= 1 &&
+                   stats.itemsEarned.house >= 1 && stats.itemsEarned.car >= 1 &&
+                   stats.itemsEarned.shovel >= 1;
+        });
+
+        // Размер инвентаря (4)
+        [10, 25, 50, 100].forEach(n => {
+            addAch(`inv_${n}`, `Инвентарь: ${n}`, `Держите ${n} предметов в инвентаре одновременно`, '🎒', () => inventorySize() >= n);
+        });
+
+        // Траты на кейсы (3)
+        [1000000, 10000000, 100000000].forEach(n => {
+            addAch(`case_spend_${n}`, `Потрачено на кейсы: ${n.toLocaleString('ru-RU')} ₽`, `Потратьте ${n.toLocaleString('ru-RU')} ₽ на кейсы`, '💳', () => stats.caseSpending >= n);
+        });
+
+        // === Сохранение / Загрузка ===
+        function saveGame() {
+            const data = {
+                balance: balance,
+                inventory: inventory,
+                stats: stats,
+                unlockedAchievements: unlockedAchievements
+            };
+            try {
+                localStorage.setItem('rageNumbersSave', JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('rageNumbersSave');
+            if (!saved) return;
+            try {
+                const data = JSON.parse(saved);
+                if (typeof data.balance === 'number') balance = data.balance;
+                if (data.inventory) inventory = Object.assign({ mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 }, data.inventory);
+                if (data.stats) {
+                    stats = Object.assign(defaultStats(), data.stats);
+                    stats.itemsEarned = Object.assign({ mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 }, data.stats.itemsEarned || {});
+                    stats.soldByType = Object.assign({ mansion: 0, heli: 0, house: 0, car: 0, shovel: 0 }, data.stats.soldByType || {});
+                }
+                if (data.unlockedAchievements) unlockedAchievements = data.unlockedAchievements;
+            } catch (e) {}
+        }
+
+        // === UI обновления ===
         function updateBalance() {
+            if (balance > stats.maxBalance) stats.maxBalance = balance;
             balanceDisplay.innerText = balance.toLocaleString('ru-RU');
-            
+
             if (balance < SPIN_COST) {
                 spinBtn.style.display = 'none';
                 tapBtn.style.display = 'block';
@@ -376,6 +689,7 @@
             } else {
                 caseBtn.style.display = 'none';
             }
+            saveGame();
         }
 
         function updateInventoryUI() {
@@ -388,8 +702,8 @@
                     let div = document.createElement('div');
                     div.className = 'inv-item';
                     div.innerHTML = `
-                        <span>${itemNames[key]} (x${inventory[key]})</span>
-                        <button class="sell-btn" onclick="sellItem('${key}')">Продать за ${itemPrices[key].toLocaleString('ru-RU')} ₽</button>
+                        <span>${itemIcons[key]} ${itemNames[key]} (x${inventory[key]})</span>
+                        <button class="sell-btn" onclick="sellItem('${key}')">Продать ${itemPrices[key].toLocaleString('ru-RU')} ₽</button>
                     `;
                     invList.appendChild(div);
                 }
@@ -400,25 +714,65 @@
             }
         }
 
-        window.sellItem = function(key) {
-            if (inventory[key] > 0) {
-                inventory[key]--;
-                balance += itemPrices[key];
-                updateBalance();
-                updateInventoryUI();
-                detailsDisplay.innerText = `Продал ${itemNames[key]} за ${itemPrices[key].toLocaleString('ru-RU')} ₽`;
-            }
-        };
+        function updateAchievementsUI() {
+            const unlockedCount = Object.keys(unlockedAchievements).filter(k => unlockedAchievements[k]).length;
+            achCounter.innerText = `${unlockedCount} / ${achievementsList.length}`;
+            achProgressBar.style.width = `${(unlockedCount / achievementsList.length) * 100}%`;
 
+            achList.innerHTML = "";
+            achievementsList.forEach(a => {
+                const isUnlocked = !!unlockedAchievements[a.id];
+                const div = document.createElement('div');
+                div.className = 'ach-item ' + (isUnlocked ? 'unlocked' : 'locked');
+                div.innerHTML = `
+                    <div class="ach-icon">${a.icon}</div>
+                    <div class="ach-info">
+                        <div class="ach-name">${a.name}</div>
+                        <div class="ach-desc">${a.desc}</div>
+                    </div>
+                    <div class="ach-check">${isUnlocked ? '✓' : ''}</div>
+                `;
+                achList.appendChild(div);
+            });
+        }
+
+        function showToast(ach) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `${ach.icon} ДОСТИЖЕНИЕ!<br>${ach.name}`;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function checkAchievements() {
+            let newlyUnlocked = [];
+            for (let a of achievementsList) {
+                if (!unlockedAchievements[a.id] && a.check()) {
+                    unlockedAchievements[a.id] = true;
+                    newlyUnlocked.push(a);
+                }
+            }
+            if (newlyUnlocked.length > 0) {
+                saveGame();
+                if (!initialLoad) {
+                    newlyUnlocked.forEach((a, i) => setTimeout(() => showToast(a), i * 300));
+                    updateAchievementsUI();
+                }
+            }
+            initialLoad = false;
+        }
+
+        // === Логика рулетки ===
         function getRandomDigit() {
             return Math.floor(Math.random() * 10).toString();
         }
 
         function generateNumber() {
             let digits = "";
-            for (let i = 0; i < 10; i++) {
-                digits += getRandomDigit();
-            }
+            for (let i = 0; i < 10; i++) digits += getRandomDigit();
             return digits;
         }
 
@@ -470,10 +824,8 @@
                 multiplier = 1000000;
             }
 
-            let basePrice = 1000;
-            let finalPrice = basePrice * multiplier;
+            let finalPrice = 1000 * multiplier;
             let details = `Макс. совпадений: ${maxFreq} (цифра ${mostFrequentDigit})`;
-
             return { rarity, finalPrice, details };
         }
 
@@ -482,6 +834,7 @@
             if (balance < SPIN_COST) return;
 
             balance -= SPIN_COST;
+            stats.totalSpins++;
             updateBalance();
 
             isSpinning = true;
@@ -489,14 +842,12 @@
             spinBtn.innerText = "Крутим...";
 
             let spins = 0;
-            let maxSpins = 20;
-            let region = regionSelect.value;
+            const maxSpins = 20;
+            const region = regionSelect.value;
 
-            let interval = setInterval(() => {
-                let tempDigits = generateNumber();
-                numberDisplay.innerText = formatNumber(tempDigits, region);
+            const interval = setInterval(() => {
+                numberDisplay.innerText = formatNumber(generateNumber(), region);
                 spins++;
-
                 if (spins >= maxSpins) {
                     clearInterval(interval);
                     finishSpin(region);
@@ -505,16 +856,23 @@
         }
 
         function finishSpin(region) {
-            let finalDigits = generateNumber();
+            const finalDigits = generateNumber();
             numberDisplay.innerText = formatNumber(finalDigits, region);
-            
-            let result = evaluateNumber(finalDigits);
-            
+
+            const result = evaluateNumber(finalDigits);
+
             rarityDisplay.innerText = result.rarity;
             priceDisplay.innerText = result.finalPrice.toLocaleString('ru-RU') + ' ₽';
             detailsDisplay.innerText = result.details;
 
-            if (result.rarity.includes("ЛЕГЕНДАРНЫЙ")) {
+            if (result.rarity.includes("ЗОЛОТО")) stats.goldSpins++;
+            else if (result.rarity === "ЛЕГЕНДАРНЫЙ") stats.legendarySpins++;
+            else if (result.rarity === "МИФИЧЕСКИЙ") stats.mythicalSpins++;
+            else if (result.rarity === "ЭПИЧЕСКИЙ") stats.epicSpins++;
+
+            if (result.rarity.includes("ЗОЛОТО")) {
+                rarityDisplay.style.color = "#FFD700";
+            } else if (result.rarity === "ЛЕГЕНДАРНЫЙ") {
                 rarityDisplay.style.color = "#FF0000";
             } else if (result.rarity === "МИФИЧЕСКИЙ") {
                 rarityDisplay.style.color = "#FF00FF";
@@ -525,66 +883,79 @@
             }
 
             balance += result.finalPrice;
+            stats.totalEarned += result.finalPrice;
             updateBalance();
 
             isSpinning = false;
             spinBtn.disabled = false;
             spinBtn.innerText = `Крутить (-${SPIN_COST} ₽)`;
+
+            checkAchievements();
         }
 
         function openCase() {
             if (balance < CASE_COST || isSpinning) return;
 
             balance -= CASE_COST;
+            stats.totalCases++;
+            stats.caseSpending += CASE_COST;
             updateBalance();
 
-            let roll = Math.random() * 100;
+            const roll = Math.random() * 100;
             let reward = "";
             let isMoney = false;
             let rewardColor = "#E5A93D";
+            let rewardIcon = "";
 
             if (roll < 5) {
                 reward = "ОСОБНЯК";
                 inventory.mansion++;
+                stats.itemsEarned.mansion++;
+                rewardIcon = itemIcons.mansion;
                 rewardColor = "#FF0000";
             } else if (roll < 15) {
                 reward = "ВЕРТОЛЕТ";
                 inventory.heli++;
+                stats.itemsEarned.heli++;
+                rewardIcon = itemIcons.heli;
                 rewardColor = "#FF00FF";
             } else if (roll < 25) {
                 reward = "МАЛЕНЬКИЙ ДОМ";
                 inventory.house++;
+                stats.itemsEarned.house++;
+                rewardIcon = itemIcons.house;
                 rewardColor = "#9B59B6";
             } else if (roll < 40) {
                 reward = "СПОРТКАР";
                 inventory.car++;
+                stats.itemsEarned.car++;
+                rewardIcon = itemIcons.car;
                 rewardColor = "#3498db";
             } else if (roll < 60) {
                 reward = "500 000 ₽";
                 isMoney = true;
+                rewardIcon = "💵";
                 rewardColor = "#2ecc71";
                 balance += 500000;
+                stats.totalEarned += 500000;
                 updateBalance();
             } else {
                 reward = "ЛОПАТА";
                 inventory.shovel++;
+                stats.itemsEarned.shovel++;
+                rewardIcon = itemIcons.shovel;
                 rewardColor = "#888";
             }
 
             updateInventoryUI();
 
-            numberDisplay.innerText = reward;
+            numberDisplay.innerText = `${rewardIcon} ${reward}`;
             numberDisplay.style.color = rewardColor;
             rarityDisplay.innerText = "КЕЙС ВСКРЫТ";
             rarityDisplay.style.color = "#fff";
             priceDisplay.innerText = isMoney ? "+500 000 ₽" : "В ИНВЕНТАРЕ";
             priceDisplay.style.color = rewardColor;
-            
-            if (isMoney) {
-                detailsDisplay.innerText = "Бабок подвалило, иди ещё крути.";
-            } else {
-                detailsDisplay.innerText = "Шмотка в рюкзаке, можешь продать.";
-            }
+            detailsDisplay.innerText = isMoney ? "Бабок подвалило, иди ещё крути." : "Шмотка в рюкзаке, можешь продать.";
 
             setTimeout(() => {
                 if (!isSpinning && balance >= SPIN_COST) {
@@ -597,14 +968,31 @@
                     detailsDisplay.innerText = "Жми крутить, чё встал. Спин - 3000 ₽";
                 }
             }, 3000);
+
+            checkAchievements();
         }
 
+        window.sellItem = function(key) {
+            if (inventory[key] > 0) {
+                inventory[key]--;
+                balance += itemPrices[key];
+                stats.totalEarned += itemPrices[key];
+                stats.itemsSold++;
+                stats.soldByType[key]++;
+                updateBalance();
+                updateInventoryUI();
+                detailsDisplay.innerText = `Продал ${itemIcons[key]} ${itemNames[key]} за ${itemPrices[key].toLocaleString('ru-RU')} ₽`;
+                checkAchievements();
+            }
+        };
+
+        // === Обработчики ===
         tapBtn.addEventListener('click', () => {
             balance += 10;
+            stats.totalEarned += 10;
             updateBalance();
-            if (balance >= SPIN_COST) {
-                detailsDisplay.innerText = "Бабки есть, хули тапаешь? Иди крути.";
-            }
+            if (balance >= SPIN_COST) detailsDisplay.innerText = "Бабки есть, хули тапаешь? Иди крути.";
+            checkAchievements();
         });
 
         spinBtn.addEventListener('click', spin);
@@ -615,18 +1003,26 @@
             invModal.style.display = 'flex';
         });
 
-        closeInv.addEventListener('click', () => {
-            invModal.style.display = 'none';
+        achBtn.addEventListener('click', () => {
+            updateAchievementsUI();
+            achModal.style.display = 'flex';
         });
 
-        window.addEventListener('click', (event) => {
-            if (event.target === invModal) {
-                invModal.style.display = 'none';
-            }
+        closeInv.addEventListener('click', () => invModal.style.display = 'none');
+        closeAch.addEventListener('click', () => achModal.style.display = 'none');
+
+        window.addEventListener('click', (e) => {
+            if (e.target === invModal) invModal.style.display = 'none';
+            if (e.target === achModal) achModal.style.display = 'none';
         });
 
+        // === Запуск ===
+        loadGame();
         updateBalance();
         updateInventoryUI();
+        updateAchievementsUI();
+        checkAchievements();
+        initialLoad = false;
     </script>
 </body>
 </html>
